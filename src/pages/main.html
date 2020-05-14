@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<title>Paribu Bitcoin Takip</title>
+	
+	<style>
+
+		*{margin:0;padding:0;box-sizing:border-box}
+		body{background:#0d1539}
+
+		.wrapper{display:flex;flex-direction:column;position:absolute;top:0px;left:0px;right:0px;bottom:0px}
+
+		.logo{width:80px;height:80px;border-radius:3px;background:#f7931a;display:flex;align-items:center;justify-content:center;margin:40px auto 0px auto}
+		.logo svg{display:block;color:#fff;font-size:48px}
+
+		h1{font:normal 700 28px 'system-ui';color:#9aa8db;display:block;text-align:center;margin-top:20px}
+
+		.status{display:flex;background:#141e46;padding:20px;justify-content:space-between;margin-top:40px}
+		.status span{color:#9aa8db;font:normal 500 16px 'system-ui'}
+
+		.area{background:#0b1231;display:flex;flex-direction:column;justify-content:center;align-items:center;flex:1}
+		.area span{color:#fff;font:normal 700 22px 'system-ui';display:flex}
+		.area span svg{display:none;position:relative;top:1px}
+		.area span em{font-style:normal;margin-left:10px}
+
+		.state.profit{color:#f1c40f}
+		.state.loss{color:#b02f37}
+
+		.state.normal svg.normal{display:block}
+		.state.profit svg.profit{display:block}
+		.state.loss svg.loss{display:block}
+
+		.area b{font:normal 700 28px 'system-ui';color:#fff;margin-top:10px}
+
+		footer{display:flex;align-items:center;padding:20px}
+		footer svg{display:block;color:#9aa8db;font-size:24px}
+		.footerLine{display:flex;flex-direction:column;flex:1;margin-left:20px}
+		.footerLine span{font:normal 400 12px 'system-ui';color:#9aa8db;opacity:0.48}
+		.footerLine b{font:normal 700 22px 'system-ui';color:#fff;margin-top:6px}
+
+	</style>
+	<script>
+		window.onload = () => {
+
+			const electron = require('electron');
+			const renderer = electron.ipcRenderer;
+
+			const currentTL = document.querySelector('.currentTL');
+			const currentBitcoin = document.querySelector('.currentBitcoin');
+			const lastMoney = document.querySelector('.lastMoney');
+			const profitAndLoss = document.querySelector('.profitAndLoss');
+			const liveBitcoin = document.querySelector('.liveBitcoin');
+			const date = document.querySelector('.date');
+			const state = document.querySelector('#state');
+
+			const digitToMoney = (money) => {
+				money = money.toString();
+				if ( money.length === 6 ) return money.substr(0, 3) + '.' + money.substr(3, 3);
+				if ( money.length === 5 ) return money.substr(0, 2) + '.' + money.substr(2, 3);
+				if ( money.length === 4 ) return money.substr(0, 1) + '.' + money.substr(1, 3);
+				return money;
+			}
+
+			renderer.send('getInit');
+			renderer.on('init', (err, data) => {
+
+				currentTL.innerHTML = digitToMoney(data.currentTL) + ' ₺';
+				currentBitcoin.innerHTML = data.currentBitcoin + ' ₿';
+				liveBitcoin.innerHTML = digitToMoney(data.currentBitcoinTL) + ' ₺';
+				date.innerHTML = data.date;
+
+				const currentMoney = (data.currentBitcoinTL * data.currentBitcoin).toFixed(2);
+				lastMoney.innerHTML = currentMoney + ' ₺';
+
+				const lastProfitLoss = (currentMoney - data.currentTL).toFixed(2);
+				profitAndLoss.innerHTML = Math.abs(lastProfitLoss) + ' ₺';
+
+				const stateCalc = parseFloat(lastProfitLoss) === 0.00 ? 'normal' : ( parseFloat(lastProfitLoss) < 0 ? 'loss' : 'profit' );
+
+				state.classList = 'state ' + stateCalc;
+
+			});
+
+			renderer.on('playSound', (err, data) => {
+				const sound = new Audio('../sound.mp3');
+				sound.play();
+			});
+
+		}
+	</script>
+</head>
+<body>
+	
+	<div class="wrapper">
+		<div class="logo">
+			<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24"><path d="M11 24v-3.022h-1v3.022h-2v-3.022h-4.969l.5-2.978h1.079c.884 0 1.39-.851 1.39-1.707v-8.889c0-.833-.485-1.404-1.365-1.404h-1.635v-3h5v-3h2v3h1v-3h2v3.053c4.315.146 6.024 1.781 6.514 3.625.58 2.18-.857 4.01-2.093 4.456 1.501.382 3.579 1.491 3.579 4.05 0 3.483-2.688 5.816-8 5.816v3h-2zm-1-11.006v5.006c3.969 0 6.688-.375 6.688-2.516 0-2.296-2.938-2.49-6.688-2.49zm0-1.994c2.211 0 5.578-.156 5.578-2.5 0-2-2.078-2.5-5.578-2.5v5z"/></svg>
+		</div>
+		<h1>Paribu Bitcoin Takip</h1>
+		<div class="status">
+			<span class="currentTL"></span>
+			<span class="currentBitcoin"></span>
+		</div>
+		<div class="area">
+			<span id="state" class="state normal">
+
+				<svg class="normal" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+				<svg class="profit" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+				<svg class="loss" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-down"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+				
+				<em class="profitAndLoss"></em>
+			</span>
+			<b class="lastMoney"></b>
+		</div>
+		<footer>
+			<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24"><path d="M11 24v-3.022h-1v3.022h-2v-3.022h-4.969l.5-2.978h1.079c.884 0 1.39-.851 1.39-1.707v-8.889c0-.833-.485-1.404-1.365-1.404h-1.635v-3h5v-3h2v3h1v-3h2v3.053c4.315.146 6.024 1.781 6.514 3.625.58 2.18-.857 4.01-2.093 4.456 1.501.382 3.579 1.491 3.579 4.05 0 3.483-2.688 5.816-8 5.816v3h-2zm-1-11.006v5.006c3.969 0 6.688-.375 6.688-2.516 0-2.296-2.938-2.49-6.688-2.49zm0-1.994c2.211 0 5.578-.156 5.578-2.5 0-2-2.078-2.5-5.578-2.5v5z"/></svg>
+			<div class="footerLine">
+				<span class="date"></span>
+				<b class="liveBitcoin"></b>
+			</div>
+		</footer>
+	</div>
+	
+</body>
+</html>
