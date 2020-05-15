@@ -30,6 +30,38 @@ app.on('ready', () => {
 		})
 	);
 
+	// Tray Start
+
+	let trayImage = nativeImage.createFromPath(path.join(__dirname, 'b.png'));
+	trayImage = trayImage.resize({ width: 16, height: 16 });
+
+	const tray = new Tray(trayImage);
+
+	tray.on('click', (event) => {
+		if ( mainWindow.isVisible() ){
+			mainWindow.hide();
+		}else{
+			showWindow();	
+		}
+	});
+	
+	const showWindow = () => {
+		const trayPos = tray.getBounds();
+		const windowPos = mainWindow.getBounds();
+		const x = Math.round(trayPos.x + (trayPos.width / 2) - (windowPos.width / 2));
+		const y = Math.round(trayPos.y + trayPos.height);
+
+		mainWindow.setPosition(x, y, false);
+		mainWindow.show();
+		mainWindow.focus();
+	}
+
+	mainWindow.on('blur', () => {
+		mainWindow.hide();
+	});
+
+	// Tray End
+
 	ipcMain.on('getInit', (event) => {
 		sendData();
 	});
@@ -50,6 +82,7 @@ app.on('ready', () => {
 				currentTL, currentBitcoin, currentBitcoinTL,
 				date: moment().format('DD.MM.YYYY HH:mm:ss')
 			});
+			tray.setTitle(digitToMoney(currentBitcoinTL) + ' ₺');
 		});
 	}
 
@@ -82,36 +115,6 @@ app.on('ready', () => {
 		if ( money.length === 4 ) return money.substr(0, 1) + '.' + money.substr(1, 3);
 		return money;
 	}
-
-	/* Üst Menü */
-
-	let trayImage = nativeImage.createFromPath(path.join(__dirname, 'b.png'));
-	trayImage = trayImage.resize({ width: 16, height: 16 });
-
-	const tray = new Tray(trayImage);
-
-	tray.on('click', (event) => {
-		if ( mainWindow.isVisible() ){
-			mainWindow.hide();
-		}else{
-			showWindow();	
-		}
-	});
-	
-	const showWindow = () => {
-		const trayPos = tray.getBounds();
-		const windowPos = mainWindow.getBounds();
-		const x = Math.round(trayPos.x + (trayPos.width / 2) - (windowPos.width / 2));
-		const y = Math.round(trayPos.y + trayPos.height);
-
-		mainWindow.setPosition(x, y, false);
-		mainWindow.show();
-		mainWindow.focus();
-	}
-
-	mainWindow.on('blur', () => {
-		mainWindow.hide();
-	});
 
 });
 
